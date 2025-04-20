@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Machine with Tokens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .slot-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .slot {
+            font-size: 50px;
+            margin: 0 10px;
+            height: 100px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000; 
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .message {
+            font-size: 24px;
+            margin-top: 20px;
+            color: green;
+        }
+        .tokens {
+            font-size: 24px;
+            margin-top: 20px;
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Slot Machine</h1>
+    <div class="slot-container">
+        <div class="slot" id="slot1">🍒</div>
+        <div class="slot" id="slot2">🍋</div>
+        <div class="slot" id="slot3">💎</div>
+    </div>
+    <button onclick="spin()">Spin</button>
+    <div class="message" id="message"></div>
+    <div class="tokens" id="tokenCount">Tokens: 0</div>
+
+    <script>
+        let tokens = Math.floor(Math.random() * (40 - 20 + 1)) + 20; // Start with random tokens between 20 and 40
+
+        // Update the token display initially
+        document.getElementById('tokenCount').innerText = "Tokens: " + tokens;
+
+        function spin() {
+            if (tokens <= 0) {
+                alert("You don't have enough tokens to spin!");
+                return; // Exit the function if no tokens are left
+            }
+
+            const symbols = ['🍒', '🍋', '💎', '🎰', '🍇'];
+            const slot1 = symbols[Math.floor(Math.random() * symbols.length)];
+            const slot2 = symbols[Math.floor(Math.random() * symbols.length)];
+            const slot3 = symbols[Math.floor(Math.random() * symbols.length)];
+
+            // Update slots immediately
+            document.getElementById('slot1').innerText = slot1;
+            document.getElementById('slot2').innerText = slot2;
+            document.getElementById('slot3').innerText = slot3;
+
+            // Clear previous message
+            const messageElement = document.getElementById('message');
+            messageElement.innerText = "";
+
+            // Deduct 1 token for the spin
+            tokens -= 1;
+            document.getElementById('tokenCount').innerText = "Tokens: " + tokens;
+
+            // Delay for 1 second before checking for jackpot
+            setTimeout(() => {
+                if (slot1 === slot2 && slot2 === slot3) {
+                    messageElement.innerText = "Jackpot!";
+                    tokens += 12; // Increment token count by 12 for jackpot
+                } else if (slot1 === slot2 || slot1 === slot3 || slot2 === slot3) {
+                    messageElement.innerText = "Double!";
+                    tokens += 1; // Increment token count by 1 for two matching symbols
+                }
+
+                // Update token display after checking
+                document.getElementById('tokenCount').innerText = "Tokens: " + tokens; 
+            }, 500); // 1000 milliseconds = 1 second
+            }
+            </script>
+
+</body>
+</html>
