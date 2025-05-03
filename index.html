@@ -1,104 +1,861 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slot Machine with Tokens</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-        }
-        .slot-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .slot {
-            font-size: 50px;
-            margin: 0 10px;
-            height: 100px; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 2px solid #000; 
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 20px;
-            cursor: pointer;
-        }
-        .message {
-            font-size: 24px;
-            margin-top: 20px;
-            color: green;
-        }
-        .tokens {
-            font-size: 24px;
-            margin-top: 20px;
-            color: blue;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>5x3 Slot Machine with Betting, Tax, and Random Shop</title>
+<style>
+  /* Reset and base styles */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #fff;
+    color: #000;
+    text-align: center;
+    margin: 0;
+    padding: 20px 10px;
+    min-height: 600px;
+    max-width: 350px;
+    margin-left: auto;
+    margin-right: auto;
+    user-select: none;
+  }
+  h1 {
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 2rem;
+  }
+
+  /* Container for shop, slots and tax side by side */
+  .game-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  /* Slot grid container */
+  .slot-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(3, 100px);
+    gap: 8px;
+    justify-items: center;
+    user-select: none;
+  }
+  /* Each slot design */
+  .slot {
+    background: #f0f0f0;
+    border-radius: 6px;
+    border: 2px solid #999;
+    font-size: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 55px;
+    height: 90px;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    color: #000;
+  }
+  /* Winning highlight */
+  .slot.win {
+    background: gold;
+    border-color: darkgoldenrod;
+    box-shadow: 0 0 10px 3px gold;
+    color: #000;
+  }
+  /* Spin button style */
+  button {
+    background: #ddd;
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 12px 30px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #000;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  button:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+  }
+  button:hover:not(:disabled) {
+    background: #ccc;
+  }
+  /* Message styling */
+  .message {
+    margin-top: 18px;
+    font-size: 24px;
+    font-weight: 700;
+    height: 30px;
+    color: #080;
+    min-height: 30px;
+  }
+  /* Tokens text styling */
+  .tokens {
+    margin-top: 12px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #00f;
+  }
+
+  /* Inventory block styles */
+  .inventory-block {
+    background: #f7f0ff;
+    border-radius: 8px;
+    border: 2px solid #8a54b8;
+    padding: 12px 14px;
+    width: 100%;
+    max-width: 350px;
+    box-sizing: border-box;
+    user-select: none;
+    font-weight: 600;
+    color: #4b2677;
+    margin: 12px auto 24px auto;
+    font-size: 16px;
+    text-align: left;
+  }
+  .inventory-block h2 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: #6d4db7;
+    text-align: center;
+  }
+  .inventory-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .inventory-list li {
+    font-size: 16px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #d6cfff;
+    padding-bottom: 4px;
+  }
+  .inventory-empty {
+    font-size: 16px;
+    color: #8c70db;
+    font-style: italic;
+    text-align: center;
+    padding: 10px 0;
+  }
+
+  /* Tax block styles */
+  .tax-block {
+    background: #e0e7ff;
+    border-radius: 8px;
+    border: 2px solid #6666cc;
+    padding: 12px 14px;
+    width: 110px;
+    box-sizing: border-box;
+    user-select: none;
+    font-weight: 600;
+    color: #333366;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+  }
+  .tax-block h2 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: #4444aa;
+  }
+  .tax-block .tax-info {
+    margin: 6px 0 0 0;
+    font-size: 14px;
+    color: #222255;
+    font-weight: 400;
+    min-height: 60px;
+  }
+  .tax-block button {
+    margin-top: 10px;
+    padding: 6px 14px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 6px;
+    border: 2px solid #4444aa;
+    background: #ccd4ff;
+    color: #222255;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  .tax-block button:hover:not(:disabled) {
+    background-color: #abb7f7;
+  }
+  .tax-block button:disabled {
+    background-color: #e6e9ff;
+    cursor: not-allowed;
+  }
+
+  /* Shop block styles */
+  .shop-block {
+    background: #d4edda;
+    border-radius: 8px;
+    border: 2px solid #3c763d;
+    padding: 12px 14px;
+    width: 160px;
+    box-sizing: border-box;
+    user-select: none;
+    font-weight: 600;
+    color: #27632a;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    font-size: 16px;
+  }
+  .shop-block h2 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: #2d6a2d;
+  }
+  .shop-block .shop-item {
+    margin: 8px 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .shop-block .item-name {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    min-height: 30px;
+  }
+  .shop-block .item-cost {
+    font-size: 14px;
+    font-weight: 400;
+    margin-bottom: 6px;
+  }
+  .shop-block button {
+    padding: 6px 14px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 6px;
+    border: 2px solid #2d6a2d;
+    background: #a6d8a8;
+    color: #1b451b;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+    width: 100%;
+  }
+  .shop-block button:hover:not(:disabled) {
+    background-color: #88c178;
+  }
+  .shop-block button:disabled {
+    background-color: #c9e7cc;
+    cursor: not-allowed;
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 400px) {
+    .game-wrapper {
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .slot-container {
+      grid-template-rows: repeat(3, 72px);
+      gap: 6px;
+    }
+    .slot {
+      font-size: 38px;
+      width: 45px;
+      height: 70px;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 24px;
+    }
+    .message {
+      font-size: 16px;
+      height: 22px;
+    }
+    .tokens {
+      font-size: 20px;
+    }
+    .tax-block {
+      width: 100%;
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+    .tax-block h2 {
+      font-size: 18px;
+    }
+    .tax-block .tax-info {
+      font-size: 13px;
+      min-height: 70px;
+    }
+    .tax-block button {
+      font-size: 14px;
+      padding: 6px 12px;
+    }
+    .shop-block {
+      width: 100%;
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+    .shop-block h2 {
+      font-size: 18px;
+    }
+    .shop-block .shop-item {
+      margin: 8px 0;
+    }
+    .shop-block button {
+      font-size: 14px;
+      padding: 6px 12px;
+    }
+    .inventory-block {
+      width: 100%;
+      font-size: 14px;
+      padding: 10px 12px;
+      margin: 12px auto 18px auto;
+    }
+    .inventory-block h2 {
+      font-size: 18px;
+    }
+    .inventory-list li {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    .inventory-empty {
+      font-size: 14px;
+      padding: 8px 0;
+    }
+  }
+</style>
 </head>
 <body>
+<h1>Slot Machine</h1>
 
-    <h1>Slot Machine</h1>
-    <div class="slot-container">
-        <div class="slot" id="slot1">🍒</div>
-        <div class="slot" id="slot2">🍋</div>
-        <div class="slot" id="slot3">💎</div>
+<div class="game-wrapper">
+  <div class="shop-block" id="shopBlock">
+    <h2>Shop</h2>
+
+    <div class="shop-item" id="shopItem0">
+      <div class="item-name" id="shopItemName0">Loading...</div>
+      <div class="item-cost" id="shopItemCost0">Cost: 0 tokens</div>
+      <button id="buyItemBtn0" disabled>Buy</button>
     </div>
-    <button onclick="spin()">Spin</button>
-    <div class="message" id="message"></div>
-    <div class="tokens" id="tokenCount">Tokens: 0</div>
 
-    <script>
-        let tokens = Math.floor(Math.random() * (40 - 20 + 1)) + 20; // Start with random tokens between 20 and 40
+    <div class="shop-item" id="shopItem1">
+      <div class="item-name" id="shopItemName1">Loading...</div>
+      <div class="item-cost" id="shopItemCost1">Cost: 0 tokens</div>
+      <button id="buyItemBtn1" disabled>Buy</button>
+    </div>
 
-        // Update the token display initially
-        document.getElementById('tokenCount').innerText = "Tokens: " + tokens;
+  </div>
 
-        function spin() {
-            if (tokens <= 0) {
-                alert("You don't have enough tokens to spin!");
-                return; // Exit the function if no tokens are left
-            }
+  <div class="slot-container" id="slotContainer">
+    <!-- Slots will be inserted here by JS -->
+  </div>
+  <div class="tax-block" id="taxBlock">
+    <h2>Tax Collector</h2>
+    <div class="tax-info" id="taxInfo">
+      No tax collected yet.
+    </div>
+    <button id="payTaxBtn" disabled>Pay Tax</button>
+  </div>
+</div>
 
-            const symbols = ['🍒', '🍋', '💎', '🎰', '🍇'];
-            const slot1 = symbols[Math.floor(Math.random() * symbols.length)];
-            const slot2 = symbols[Math.floor(Math.random() * symbols.length)];
-            const slot3 = symbols[Math.floor(Math.random() * symbols.length)];
+<button id="spinBtn">Spin</button>
 
-            // Update slots immediately
-            document.getElementById('slot1').innerText = slot1;
-            document.getElementById('slot2').innerText = slot2;
-            document.getElementById('slot3').innerText = slot3;
+<div class="message" id="message"></div>
+<div class="tokens" id="tokenCount">Tokens: 0</div>
 
-            // Clear previous message
-            const messageElement = document.getElementById('message');
-            messageElement.innerText = "";
+<!-- Inventory block -->
+<div class="inventory-block" id="inventoryBlock">
+  <h2>Inventory</h2>
+  <ul class="inventory-list" id="inventoryList">
+    <li class="inventory-empty">Inventory is empty.</li>
+  </ul>
+</div>
 
-            // Deduct 1 token for the spin
-            tokens -= 1;
-            document.getElementById('tokenCount').innerText = "Tokens: " + tokens;
+<script>
+  (() => {
+    const symbols = ['🍒', '🍋', '💎', '🎰', '🍇'];
+    const rows = 3;
+    const cols = 5;
 
-            // Delay for 1 second before checking for jackpot
-            setTimeout(() => {
-                if (slot1 === slot2 && slot2 === slot3) {
-                    messageElement.innerText = "Jackpot!";
-                    tokens += 12; // Increment token count by 12 for jackpot
-                } else if (slot1 === slot2 || slot1 === slot3 || slot2 === slot3) {
-                    messageElement.innerText = "Double!";
-                    tokens += 1; // Increment token count by 1 for two matching symbols
+    let tokens = Math.floor(Math.random() * (50 - 30 + 1)) + 30;
+
+    const slotContainer = document.getElementById('slotContainer');
+    const messageEl = document.getElementById('message');
+    const tokenCountEl = document.getElementById('tokenCount');
+    const spinBtn = document.getElementById('spinBtn');
+    const taxBlock = document.getElementById('taxBlock');
+    const taxInfo = document.getElementById('taxInfo');
+    const payTaxBtn = document.getElementById('payTaxBtn');
+    const shopBlock = document.getElementById('shopBlock');
+
+    // Both shop item elements and buttons
+    const buyItemBtn0 = document.getElementById('buyItemBtn0');
+    const buyItemBtn1 = document.getElementById('buyItemBtn1');
+    const shopItemName0 = document.getElementById('shopItemName0');
+    const shopItemCost0 = document.getElementById('shopItemCost0');
+    const shopItemName1 = document.getElementById('shopItemName1');
+    const shopItemCost1 = document.getElementById('shopItemCost1');
+
+    // Inventory elements
+    const inventoryBlock = document.getElementById('inventoryBlock');
+    const inventoryList = document.getElementById('inventoryList');
+
+    // Tax related variables
+    let spinCount = 0;
+    let taxRound = 1;
+    let taxDue = false;
+    let baseTaxAmount = 0;
+    let currentTaxAmount = 0;
+
+    // Inventory object to track items and quantities
+    const inventory = {};
+
+    // Special effect state variables
+    let hasCoffee = 0;      // count of coffee items for triple reward x2
+    let hasGoodMan = 0;     // count of good man items to reduce tax cost by 50%
+    let hasAlcohol = 0;     // count of alcohol items to modify next spin reward multiply
+    let nextAlcoholMultiplier = null; // multiplier for next spin
+    // family and girl effects are instant on purchase
+
+    // Define shop items
+    const shopItems = [
+      {
+        name: 'Coffee',
+        cost: 10,
+        description: 'random plenty of money',
+            effect: () => {
+              const cashs = Math.floor(Math.random() * (30 - 10 + 1)) + 10;
+              tokens += cashs;
+              updateTokens();
+          messageEl.innerText = `Coffee bought! Triple rewards ${cashs} Token!`;
+        }
+      },
+      {
+        name: 'Good Man',
+        cost: 40,
+        description: '-50% tax money',
+        effect: () => {
+              const tax = Math.floor(currentTaxAmount/2);
+              tokens += tax;
+              updateTokens();
+          messageEl.innerText = 'Good Man bought! Tax cost gain!';
+        }
+      },
+      {
+        name: 'Alcohol',
+        cost: 20,
+        description: 'Next roll reward multiplied (0.5 - 4)',
+        effect: () => {
+          hasAlcohol++;
+          nextAlcoholMultiplier = 0.5 + Math.random() * 3.5; // 0.5 to 4
+          nextAlcoholMultiplier = Math.round(nextAlcoholMultiplier * 100) / 100;
+          messageEl.innerText = `Alcohol bought! Next spin reward multiplier: x${nextAlcoholMultiplier}`;
+        }
+      },
+      {
+        name: 'Family',
+        cost: 40,
+        description: 'Get random money 30 - 60 tokens',
+        effect: () => {
+          const cash = Math.floor(Math.random() * (60 - 30 + 1)) + 30;
+          tokens += cash;
+          updateTokens();
+          messageEl.innerText = `Family bought! You received ${cash} tokens!`;
+        }
+      },
+      {
+        name: 'Girl',
+        cost: 100,
+        description: 'Win the game',
+        effect: () => {
+          messageEl.innerText = 'Girl bought! You instantly won';
+        }
+      }
+    ];
+
+    // Current shop item indices
+    let currentShopIndices = [0, 1];
+
+    // Initialize slots in the grid
+    function initSlots() {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const slotDiv = document.createElement('div');
+          slotDiv.classList.add('slot');
+          slotDiv.id = `slot-${r}-${c}`;
+          // Set initial symbols randomly
+          slotDiv.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+          slotContainer.appendChild(slotDiv);
+        }
+      }
+    }
+
+    // Update token display
+    function updateTokens() {
+      tokenCountEl.innerText = `Tokens: ${tokens}`;
+      // Disable spin only if no tokens or tax due and not enough tokens to pay
+      spinBtn.disabled = tokens <= 0 || (taxDue && tokens < currentTaxAmount);
+      // Enable or disable payTaxBtn based on tokens and taxDue flag
+      payTaxBtn.disabled = !taxDue || tokens < currentTaxAmount;
+      // Buy buttons enable only if tokens enough for respective item
+      buyItemBtn0.disabled = tokens < shopItems[currentShopIndices[0]].cost;
+      buyItemBtn1.disabled = tokens < shopItems[currentShopIndices[1]].cost;
+    }
+
+    // Remove any previous winning highlight
+    function clearHighlights() {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const slotDiv = document.getElementById(`slot-${r}-${c}`);
+          slotDiv.classList.remove('win');
+        }
+      }
+    }
+
+    // Check 5 horizontal same symbols in a row. Return matched coordinates or null.
+    function checkHoriJackpot(spinResult) {
+      for (let r = 0; r < rows; r++) {
+        if (spinResult[r].every(sym => sym === spinResult[r][0])) {
+          // Return coordinates of this whole row
+          return Array.from({ length: cols }, (_, c) => [r, c]);
+        }
+      }
+      return null;
+    }
+
+    // Check 3 vertical same symbols in any column. Return matched coordinates or null.
+    function checkVertiJackpot(spinResult) {
+      for (let c = 0; c < cols; c++) {
+        let colSymbols = [];
+        for (let r = 0; r < rows; r++) {
+          colSymbols.push(spinResult[r][c]);
+        }
+        if (colSymbols.length === 3 && colSymbols.every(sym => sym === colSymbols[0])) {
+          return Array.from({ length: rows }, (_, r) => [r, c]);
+        }
+      }
+      return null;
+    }
+
+    // Check V shape jackpot
+    // Return matched coordinates or null.
+    function checkVShapeJackpot(spinResult) {
+      const vPositions = [
+        [0,0], [0,4],
+        [1,1], [1,3],
+        [2,2]
+      ];
+      const firstSymbol = spinResult[vPositions[0][0]][vPositions[0][1]];
+      if (vPositions.every(pos => spinResult[pos[0]][pos[1]] === firstSymbol)) {
+        return vPositions;
+      }
+      return null;
+    }
+
+    // Check 2 adjacent vertical same symbols in any column
+    // Return the first found matched pair coordinates or null.
+    function checkDoubleVertical(spinResult) {
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows - 1; r++) { // Loop until the second last row
+          if (spinResult[r][c] === spinResult[r + 1][c]) {
+            return [[r, c], [r + 1, c]]; // Return the coordinates of the matched pair
+          }
+        }
+      }
+      return null; // Return null if no pairs found
+    }
+
+
+    // Check 3 horizontal same symbols in a single row (consecutive)
+    // Return matched coordinates or null.
+    function checkTripleHorizontal(spinResult) {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c <= cols - 3; c++) {
+          const a = spinResult[r][c];
+          const b = spinResult[r][c + 1];
+          const c2 = spinResult[r][c + 2];
+          if (a === b && b === c2) {
+            return [[r,c],[r,c+1],[r,c+2]];
+          }
+        }
+      }
+      return null;
+    }
+
+    // Set tax due and initialize tax amount for the next tax round
+    function triggerTaxDue() {
+      baseTaxAmount = Math.pow(3, taxRound) + taxRound;
+      // If player has Good Man items, halve tax
+      if (hasGoodMan > 0) {
+        currentTaxAmount = Math.ceil( (baseTaxAmount) * 0.5 );
+      } else {
+        currentTaxAmount = baseTaxAmount;
+      }
+      taxDue = true;
+      updateTaxInfo();
+      updateTokens();
+      messageEl.innerText = 'Tax is due! Please pay before spinning.';
+    }
+
+    // Increase tax by 5% on every spin if user doesn't pay tax
+    function increaseTax() {
+      currentTaxAmount = Math.ceil(currentTaxAmount * 1.05);
+      updateTaxInfo();
+      updateTokens();
+    }
+
+    function updateTaxInfo() {
+      if (taxDue) {
+        taxInfo.innerHTML = `Round ${taxRound} tax due:<br/><strong>${currentTaxAmount} tokens</strong><br/><small>(3^${taxRound} + ${taxRound}) + 5% per unpaid roll${hasGoodMan > 0 ? ' (halved by Good Man)' : ''}</small>`;
+        payTaxBtn.disabled = tokens < currentTaxAmount;
+      } else {
+        taxInfo.innerText = 'No tax collected yet.';
+        payTaxBtn.disabled = true;
+      }
+    }
+
+    // User pays the tax
+    function payTax() {
+      if (tokens >= currentTaxAmount) {
+        tokens -= currentTaxAmount;
+        taxDue = false;
+        taxRound++;
+        currentTaxAmount = 0;
+        baseTaxAmount = 0;
+        messageEl.innerText = 'Tax paid! You can spin now.';
+        updateTokens();
+        updateTaxInfo();
+      } else {
+        alert('Not enough tokens to pay the tax!');
+      }
+    }
+
+    // Buy shop item then replace shop item with a new random item at given index
+    function buyShopItem(index) {
+      const itemIndex = currentShopIndices[index];
+      const item = shopItems[itemIndex];
+      if (tokens < item.cost) {
+        alert(`Not enough tokens to buy ${item.name}!`);
+        return;
+      }
+      tokens -= item.cost;
+
+      // Apply item effect
+      item.effect();
+
+      // Update inventory counts
+      if (inventory[item.name]) {
+        inventory[item.name]++;
+      } else {
+        inventory[item.name] = 1;
+      }
+
+      renderInventory();
+      updateTokens();
+
+      // Pick new random item for this shop position different from current
+      let newIndex;
+      do {
+        newIndex = Math.floor(Math.random() * shopItems.length);
+      } while (newIndex === currentShopIndices[0] || newIndex === currentShopIndices[1]);
+      currentShopIndices[index] = newIndex;
+      updateShopDisplay();
+    }
+
+    // Render inventory in the inventory block
+    function renderInventory() {
+      // Clear existing list items
+      inventoryList.innerHTML = '';
+
+      const itemNames = Object.keys(inventory);
+      if (itemNames.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'inventory-empty';
+        li.innerText = 'Inventory is empty.';
+        inventoryList.appendChild(li);
+        return;
+      }
+
+      itemNames.forEach(item => {
+        const li = document.createElement('li');
+        const qty = inventory[item];
+        li.innerText = `${item}: ${qty}`;
+        inventoryList.appendChild(li);
+      });
+    }
+
+    function updateShopDisplay() {
+      const item0 = shopItems[currentShopIndices[0]];
+      shopItemName0.innerText = item0.name;
+      shopItemCost0.innerText = `Cost: ${item0.cost} tokens`;
+      buyItemBtn0.disabled = tokens < item0.cost;
+
+      const item1 = shopItems[currentShopIndices[1]];
+      shopItemName1.innerText = item1.name;
+      shopItemCost1.innerText = `Cost: ${item1.cost} tokens`;
+      buyItemBtn1.disabled = tokens < item1.cost;
+    }
+
+    buyItemBtn0.addEventListener('click', () => buyShopItem(0));
+    buyItemBtn1.addEventListener('click', () => buyShopItem(1));
+
+    // Spin function - fixed bet 1 token per spin and 5% tax increase if unpaid
+    function spin() {
+      const bet = 1;
+      if (tokens < bet) {
+        alert("You don't have enough tokens to spin!");
+        return;
+      }
+      if (tokens < currentTaxAmount) {
+        alert("You must pay the tax before spinning!");
+        return;
+      }
+
+      messageEl.innerText = '';
+      clearHighlights();
+      tokens -= bet;
+      spinCount++;
+      updateTokens();
+
+      // When spin count reaches multiple of 10, trigger tax due
+      if (spinCount % 10 === 0 && !taxDue) {
+        triggerTaxDue();
+        // After triggering tax, spin still allowed but taxDue true
+      }
+
+      // Array to hold spin results: rows of symbols
+      const spinResult = [];
+
+      // Fill spinResult and update slots visually
+      for (let r = 0; r < rows; r++) {
+        const rowSymbols = [];
+        for (let c = 0; c < cols; c++) {
+          const sym = symbols[Math.floor(Math.random() * symbols.length)];
+          rowSymbols.push(sym);
+          const slotDiv = document.getElementById(`slot-${r}-${c}`);
+          slotDiv.innerText = sym;
+          // Small pop animation
+          slotDiv.style.transform = 'scale(1.1)';
+          setTimeout(() => {
+            slotDiv.style.transform = 'scale(1)';
+          }, 150);
+        }
+        spinResult.push(rowSymbols);
+      }
+
+      setTimeout(() => {
+        let winType = null;
+        let winTokens = 0;
+        let winningCoords = null;
+
+        // Check V shape jackpot (highest reward)
+        winningCoords = checkVShapeJackpot(spinResult);
+        if (winningCoords) {
+          winType = 'V Jackpot!';
+          winTokens = 25;
+        } else {
+          // Check 5 horizontal jackpot
+          winningCoords = checkHoriJackpot(spinResult);
+          if (winningCoords) {
+            winType = 'Horizontal!';
+            winTokens = 15;
+          } else {
+            // Check 3 vertical jackpot
+            winningCoords = checkVertiJackpot(spinResult);
+            if (winningCoords) {
+              winType = 'Vertical!';
+              winTokens = 4;
+            } else {
+              // Check 3 horizontal triple
+              winningCoords = checkTripleHorizontal(spinResult);
+              if (winningCoords) {
+                winType = 'Triple!';
+                winTokens = 2;
+                // Apply coffee effect x2 on triple if any
+                if (hasCoffee > 0) {
+                  winTokens *= 2;
+                  messageEl.innerText = 'Triple! (x2 coffee bonus)';
                 }
-
-                // Update token display after checking
-                document.getElementById('tokenCount').innerText = "Tokens: " + tokens; 
-            }, 500); // 1000 milliseconds = 1 second
+              } else {
+                // Check 2 vertical double
+                winningCoords = checkDoubleVertical(spinResult);
+                if (winningCoords) {
+                  winType = 'Double!';
+                  winTokens = 1;
+                }
+              }
             }
-            </script>
+          }
+        }
 
+        if (winTokens > 0) {
+          if (!messageEl.innerText.includes('Triple!')) {
+            messageEl.innerText = winType;
+          }
+          // Apply alcohol multiplier if active
+          if (hasAlcohol > 0 && nextAlcoholMultiplier !== null) {
+            winTokens = Math.round(winTokens * nextAlcoholMultiplier);
+            messageEl.innerText += ` (Alcohol multiplier x${nextAlcoholMultiplier})`;
+            // Reset alcohol multiplier effect for next spin
+            hasAlcohol--;
+            nextAlcoholMultiplier = null;
+          }
+          tokens += winTokens * bet;
+          // Highlight matched slots
+          winningCoords.forEach(([r,c]) => {
+            const slotDiv = document.getElementById(`slot-${r}-${c}`);
+            if(slotDiv) slotDiv.classList.add('win');
+          });
+        } else {
+          if (!taxDue) {
+            messageEl.innerText = '';
+          }
+        }
+
+        // If tax due, increase tax by 5%
+        if (taxDue) {
+          increaseTax();
+          messageEl.innerText += '';
+        }
+
+        updateTokens();
+      }, 50);
+    }
+
+    // Initialize app
+    function init() {
+      initSlots();
+      // Set initial two random shop items, ensuring different indices
+      do {
+        currentShopIndices[0] = Math.floor(Math.random() * shopItems.length);
+        currentShopIndices[1] = Math.floor(Math.random() * shopItems.length);
+      } while(currentShopIndices[0] === currentShopIndices[1]);
+
+      updateShopDisplay();
+      updateTokens();
+      updateTaxInfo();
+      renderInventory();
+      // Add event listeners
+      spinBtn.addEventListener('click', spin);
+      payTaxBtn.addEventListener('click', payTax);
+    }
+
+
+      
+    init();
+  })();
+</script>
 </body>
 </html>
+
